@@ -1,7 +1,5 @@
 # AI-Scopus-Agent
 
-# AI-Scopus-Agent
-
 <div style="display: flex; align-items: center; justify-content: space-between;">
     <div style="flex: 3; padding-right: 20px;">
         This Streamlit web application, **AI-Scopus-Agent**, allows users to search for academic publications using the Scopus database and summarizes the results using the Llama-3-Groq language model. The app leverages the `scopus_search` tool to retrieve publications based on user-defined queries and provides detailed results along with a concise summary.
