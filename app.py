@@ -376,7 +376,6 @@ def main():
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: #f1f1f1;
             text-align: center;
             padding: 10px 0;
         }
