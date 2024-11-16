@@ -88,27 +88,22 @@ def scopus_search(query: str, Count:int) -> str:
     - Syntax: FIELD("exact phrase")
     - Example: TITLE("convolutional neural network")
 
-    7. Subject Area Search:
-    - Purpose: Find publications within a specific subject area.
-    - Syntax: SUBJAREA("subject area")
-    - Example: SUBJAREA("computer science")
-
-    8. DOI Search:
+    7. DOI Search:
     - Purpose: Retrieve a publication using its DOI.
     - Syntax: DOI("doi number")
     - Example: DOI("10.1016/j.artint.2020.103536")
 
-    9. Affiliation Search:
+    8. Affiliation Search:
     - Purpose: Find publications associated with a specific institution.
     - Syntax: AFFIL("institution name")
     - Example: AFFIL("Massachusetts Institute of Technology")
 
-    10. Open Access Filter:
+    9. Open Access Filter:
         - Purpose: Limit results to open-access publications.
         - Syntax: OA
         - Example: TITLE-ABS-KEY("quantum computing") AND OA
 
-    11. Language Filter:
+    10. Language Filter:
         - Purpose: Restrict results to publications in a specific language.
         - Syntax: LANGUAGE("language")
         - Example: TITLE-ABS-KEY("renewable energy") AND LANGUAGE("English")
