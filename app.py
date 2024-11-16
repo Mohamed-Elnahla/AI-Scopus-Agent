@@ -77,10 +77,10 @@ def scopus_search(query: str, Count:int) -> str:
         - PUBYEAR = year
         - PUBYEAR > year
         - PUBYEAR < year
-    - To represent 'greater than or equal to' (>=):
+    - To represent 'greater than or equal to' DON't USE This(>=) but:
         - Use: PUBYEAR = year OR PUBYEAR > year
         - Example: PUBYEAR = 2015 OR PUBYEAR > 2015
-    - To represent 'less than or equal to' (<=):
+    - To represent 'less than or equal to' DON't USE This(<=) but:
         - Use: PUBYEAR = year OR PUBYEAR < year
         - Example: PUBYEAR = 2020 OR PUBYEAR < 2020
 
