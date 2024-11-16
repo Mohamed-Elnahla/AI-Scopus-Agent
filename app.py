@@ -14,10 +14,10 @@ from langchain_core.prompts import ChatPromptTemplate
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,  # Set to DEBUG for more detailed logs
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    filename="app.log",  # Logs will be written to this file
-    filemode="a"  # Append to the log file
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
 )
+
 
 # Set up API keys from Streamlit secrets
 os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
