@@ -3,15 +3,37 @@ import os
 import requests
 import textwrap
 import json
+import logging
 
 # Import necessary modules from your original script
 from langchain_core.tools import tool
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set to DEBUG for more detailed logs
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    filename="app.log",  # Logs will be written to this file
+    filemode="a"  # Append to the log file
+)
+
 # Set up API keys from Streamlit secrets
 os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
 os.environ["SCOPUS_API_KEY"] = st.secrets["SCOPUS_API_KEY"]
+
+
+
+# Set the page configuration
+st.set_page_config(
+    page_title="AI Scopus Agent",  # Title of the browser tab
+    page_icon="🔎",  # Icon for the tab, can be an emoji or a local image
+    layout="wide",  # Layout can be "centered" or "wide"
+)
+
+
+
 
 # Define the scopus_search tool
 @tool
@@ -21,56 +43,65 @@ def scopus_search(query: str, Count:int) -> str:
 
     Parameters:
     - query (str): A Scopus-formatted query string.
-    - Count (int): Number of results to return by default 10 if not stated
+    - count (int): Number of results to return; defaults to 10 if not specified.
+
     Returns:
     - str: A formatted string of search results, including titles, authors, journals, publication years, abstracts, and links.
 
     Query Construction Guidelines:
 
     1. Basic Topic Search:
-       - Purpose: Find publications related to a specific topic.
-       - Syntax: TITLE-ABS-KEY("search terms")
-       - Example: TITLE-ABS-KEY("machine learning")
+    - Purpose: Find publications related to a specific topic.
+    - Syntax: TITLE-ABS-KEY("search terms")
+    - Example: TITLE-ABS-KEY("machine learning")
 
     2. Author Search:
-       - Purpose: Retrieve works by a specific author.
-       - Syntax: AUTHLASTNAME("author's last name") or AUTH("author's full name")
-       - Example: AUTHLASTNAME("Smith") or AUTH("Smith, John")
+    - Purpose: Retrieve works by a specific author.
+    - Syntax: AUTHLASTNAME("author's last name") or AUTH("author's full name")
+    - Example: AUTHLASTNAME("Smith") or AUTH("Smith, John")
 
     3. Journal Search:
-       - Purpose: Locate articles published in a particular journal.
-       - Syntax: SRCTITLE("journal name")
-       - Example: SRCTITLE("Journal of Artificial Intelligence Research")
+    - Purpose: Locate articles published in a particular journal.
+    - Syntax: SRCTITLE("journal name")
+    - Example: SRCTITLE("Journal of Artificial Intelligence Research")
 
     4. Year Filter:
-       - Purpose: Filter publications by publication year.
-       - Syntax: PUBYEAR = year, PUBYEAR > year, or PUBYEAR < year
-       - Example: PUBYEAR > 2015
+    - Purpose: Filter publications by publication year.
+    - Syntax:
+        - PUBYEAR = year
+        - PUBYEAR > year
+        - PUBYEAR < year
+    - To represent 'greater than or equal to' (>=):
+        - Use: PUBYEAR = year OR PUBYEAR > year
+        - Example: PUBYEAR = 2015 OR PUBYEAR > 2015
+    - To represent 'less than or equal to' (<=):
+        - Use: PUBYEAR = year OR PUBYEAR < year
+        - Example: PUBYEAR = 2020 OR PUBYEAR < 2020
 
     5. Combination of Criteria:
-       - Purpose: Combine multiple search criteria.
-       - Syntax: Use logical operators (AND, OR, NOT) and parentheses to group terms.
-       - Example: TITLE-ABS-KEY("deep learning") AND PUBYEAR > 2018
+    - Purpose: Combine multiple search criteria.
+    - Syntax: Use logical operators (AND, OR, NOT) and parentheses to group terms.
+    - Example: TITLE-ABS-KEY("deep learning") AND (PUBYEAR = 2018 OR PUBYEAR > 2018)
 
     6. Exact Phrase Search:
-       - Purpose: Search for an exact phrase within a specific field.
-       - Syntax: FIELD("exact phrase")
-       - Example: TITLE("convolutional neural network")
+    - Purpose: Search for an exact phrase within a specific field.
+    - Syntax: FIELD("exact phrase")
+    - Example: TITLE("convolutional neural network")
 
     7. Subject Area Search:
-       - Purpose: Find publications within a specific subject area.
-       - Syntax: SUBJAREA("subject area")
-       - Example: SUBJAREA("computer science")
+    - Purpose: Find publications within a specific subject area.
+    - Syntax: SUBJAREA("subject area")
+    - Example: SUBJAREA("computer science")
 
     8. DOI Search:
-       - Purpose: Retrieve a publication using its DOI.
-       - Syntax: DOI("doi number")
-       - Example: DOI("10.1016/j.artint.2020.103536")
+    - Purpose: Retrieve a publication using its DOI.
+    - Syntax: DOI("doi number")
+    - Example: DOI("10.1016/j.artint.2020.103536")
 
     9. Affiliation Search:
-       - Purpose: Find publications associated with a specific institution.
-       - Syntax: AFFIL("institution name")
-       - Example: AFFIL("Massachusetts Institute of Technology")
+    - Purpose: Find publications associated with a specific institution.
+    - Syntax: AFFIL("institution name")
+    - Example: AFFIL("Massachusetts Institute of Technology")
 
     10. Open Access Filter:
         - Purpose: Limit results to open-access publications.
@@ -90,6 +121,7 @@ def scopus_search(query: str, Count:int) -> str:
 
     By following these guidelines, you can construct effective queries to retrieve relevant publications from Scopus using the scopus_search function.
     """
+
 
     api_key = os.getenv("SCOPUS_API_KEY")
     if not api_key:
@@ -157,6 +189,8 @@ def scopus_search(query: str, Count:int) -> str:
                     raw_abstract = sd_data.get("full-text-retrieval-response", {}).get("coredata", {}).get("dc:description", "No abstract available.")
                     # Format the abstract to clean unnecessary spacing and wrap text
                     abstract = "\n".join(textwrap.wrap(raw_abstract.strip(), width=80))
+                elif sd_response.status_code == 404:
+                    abstract = "No abstract available."
                 else:
                     abstract = f"Error fetching abstract from ScienceDirect: {sd_response.status_code}"
             except requests.exceptions.RequestException as e:
@@ -202,70 +236,78 @@ def summarize_results(results: str) -> str:
 
 # Process user input and display results
 def process_user_input(user_input):
-    response = chain.invoke({"input": user_input})
+    logging.info("User input received: %s", user_input)
+    
+    try:
+        response = chain.invoke({"input": user_input})
+        logging.info("Response from chain.invoke: %s", response)
 
-    # Process the model's response
-    if response.tool_calls:
-        st.write("Processing tool calls...")
-        all_results = []
+        # Process the model's response
+        if response.tool_calls:
+            logging.info("Tool calls detected in response")
+            all_results = []
 
-        for tool_call in response.tool_calls:
-            tool_name = tool_call['name']
-            tool_args = tool_call['args']
+            for tool_call in response.tool_calls:
+                tool_name = tool_call['name']
+                tool_args = tool_call['args']
+                logging.info("Processing tool call: %s with args: %s", tool_name, tool_args)
 
-            # Display tool name and arguments
-            st.markdown(f"**Tool Name:** {tool_name}")
-            st.markdown(f"**Tool Arguments:** {tool_args}")
+                # Execute the tool with the provided arguments
+                results = scopus_search(tool_args)
+                if isinstance(results, str):
+                    try:
+                        # Parse the string result into JSON
+                        results = json.loads(results)
+                        # logging.info("Results parsed into JSON: %s", results)
+                    except json.JSONDecodeError as e:
+                        # Handle cases where the result is not valid JSON
+                        logging.warning("Failed to parse result as JSON: %s. Error: %s", results, str(e))
+                        continue  # Skip to the next result
 
-            # Execute the tool with the provided arguments
-            results = scopus_search(tool_args)
-            if isinstance(results, str):
-                try:
-                    # Parse the string result into JSON
-                    results = json.loads(results)
-                except json.JSONDecodeError:
-                    # Handle cases where the result is not valid JSON
-                    st.warning(f"Warning: Failed to parse result as JSON: {results}")
-                    continue  # Skip to the next result
+                all_results.extend(results)
+                # logging.info("Accumulated results: %s", all_results)
 
-            all_results.extend(results)
-
-        if all_results:
-            st.markdown("### Detailed Results")
-
-            # Loop through each result and format as Markdown
-            for result in all_results:
-                st.markdown(
-                    f"**Title:** {result.get('Title', 'N/A')}\n\n"
-                    f"**Authors:** {result.get('Authors', 'N/A')}\n\n"
-                    f"**Journal:** {result.get('Journal', 'N/A')} ({result.get('Year', 'N/A')})\n\n"
-                    f"**DOI:** {result.get('DOI', 'N/A')} ([Link]({result.get('DOI_URL', '#')}))\n\n"
-                    f"**Abstract:** {result.get('Abstract', 'N/A')}\n\n"
-                    f"**Link:** [Full Text]({result.get('Link', '#')})\n\n"
-                    "---"  # Add a horizontal line between results
-                )
-
-        # Summarize results
-        str_results = '\n\n'.join([
-            '\n'.join([
-                f"Title: {r.get('Title', '')}",
-                f"Authors: {r.get('Authors', '')}",
-                f"Journal: {r.get('Journal', '')} ({r.get('Year', '')})",
-                f"DOI: {r.get('DOI', '')}",
-                f"DOI URL: {r.get('DOI_URL', '')}",
-                f"Abstract: {r.get('Abstract', '')}",
-                f"Link: {r.get('Link', '')}"
+            # Summarize results
+            str_results = '\n\n'.join([
+                '\n'.join([
+                    f"Title: {r.get('Title', '')}",
+                    f"Authors: {r.get('Authors', '')}",
+                    f"Journal: {r.get('Journal', '')} ({r.get('Year', '')})",
+                    f"DOI: {r.get('DOI', '')}",
+                    f"DOI URL: {r.get('DOI_URL', '')}",
+                    f"Abstract: {r.get('Abstract', '')}",
+                    f"Link: {r.get('Link', '')}"
+                ])
+                for r in all_results
             ])
-            for r in all_results
-        ])
-        summary = summarize_results(str_results)
+            summary = summarize_results(str_results)
+            logging.info("Generated summary of results")
 
-        # Display summary
-        st.markdown("### Summary of Search Results")
-        st.markdown(summary)
-    else:
-        # If no tool calls, display the content directly
-        st.markdown(response.content)
+            # Display summary
+            st.markdown("### Summary of Search Results")
+            st.markdown(summary)
+            
+            if all_results:
+                st.markdown("### Detailed Results")
+
+                # Loop through each result and format as Markdown
+                for result in all_results:
+                    st.markdown(
+                        f"**Title:** {result.get('Title', 'N/A')}\n\n"
+                        f"**Authors:** {result.get('Authors', 'N/A')}\n\n"
+                        f"**Journal:** {result.get('Journal', 'N/A')} ({result.get('Year', 'N/A')})\n\n"
+                        f"**DOI:** {result.get('DOI', 'N/A')} ([Link]({result.get('DOI_URL', '#')}))\n\n"
+                        f"**Abstract:** {result.get('Abstract', 'N/A')}\n\n"
+                        "---"  # Add a horizontal line between results
+                    )
+        else:
+            # If no tool calls, display the content directly
+            logging.info("No tool calls found in response, displaying content")
+            st.markdown(response.content)
+
+    except Exception as e:
+        logging.error("Error occurred during processing: %s", str(e))
+        st.error(f"An error occurred: {e}")
 
 # System message and chain setup
 system_message = (
@@ -299,7 +341,7 @@ chain = prompt | llm_with_tools
 
 # Streamlit app main function
 def main():
-    st.title("Scopus Search and Summarize App")
+    st.title("AI Scopus Agent")
 
     # Instructions
     st.markdown("""
@@ -307,13 +349,45 @@ def main():
     """)
 
     # User input
-    user_input = st.text_input("Enter your query:")
+    user_input = st.text_area("Enter your query:", height=100)  # Adjust height as needed
     if st.button("Search"):
         if not user_input:
             st.warning("Please enter a query.")
         else:
             with st.spinner("Processing..."):
                 process_user_input(user_input)
+    
+    # Add LinkedIn and GitHub links
+    st.markdown(
+        """
+        #### Connect with me:
+        - [LinkedIn](https://www.linkedin.com/in/mohamed-el-nahla/)
+        - [GitHub](https://github.com/Mohamed-Elnahla/)
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Footer
+    st.markdown(
+        """
+        <style>
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px 0;
+        }
+        </style>
+        <div class="footer">
+            <p>Created by <a href="https://www.linkedin.com/in/mohamed-el-nahla/" target="_blank">Mohamed Elnahla</a> | 
+            <a href="https://github.com/Mohamed-Elnahla/" target="_blank">GitHub</a></p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 if __name__ == "__main__":
     main()
