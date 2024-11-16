@@ -179,3 +179,4 @@ For any questions or suggestions, please contact:
 - **Name**: Mohamed Elnahla
 - **Email**: eng.mohamed.elnahla@gmail.com
 - **GitHub**: [Mohamed-Elnahla](https://github.com/Mohamed-Elnahla)
+- **Linkedin**: [https://www.linkedin.com/in/mohamed-el-nahla](https://www.linkedin.com/in/mohamed-el-nahla/)
