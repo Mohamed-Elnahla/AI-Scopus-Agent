@@ -65,6 +65,7 @@ def scopus_search(query: str, Count:int) -> str:
     - Purpose: Retrieve works by a specific author.
     - Syntax: AUTHLASTNAME("author's last name") or AUTH("author's full name")
     - Example: AUTHLASTNAME("Smith") or AUTH("Smith, John")
+    - DON'T USE asume the user name if not given
 
     3. Journal Search:
     - Purpose: Locate articles published in a particular journal.
