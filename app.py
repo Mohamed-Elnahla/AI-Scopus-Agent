@@ -38,7 +38,8 @@ meta_tags = """
 <meta property="og:description" content="AI-Scopus-Agent, allows users to search for academic publications using the Scopus database and summarizes the results using the Llama-3-Groq language model.">
 <meta property="og:image" content="https://raw.githubusercontent.com/Mohamed-Elnahla/AI-Scopus-Agent/refs/heads/main/Resources/ICON.webp">
 """
-
+# Inject the meta tags into the app's header
+st.markdown(meta_tags, unsafe_allow_html=True)
 
 # Define the scopus_search tool
 @tool
