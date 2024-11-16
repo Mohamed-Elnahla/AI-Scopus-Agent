@@ -1,4 +1,4 @@
-# AI-Scopus-Agent
+# AI Scopus Agent
 
 <div style="display: flex; align-items: center; justify-content: space-between;">
     <div style="flex: 3; padding-right: 20px;">
